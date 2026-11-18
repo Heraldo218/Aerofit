@@ -613,13 +613,23 @@
     </div>
   </div>
 
+  <!-- Librería de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
-    const STORAGE_KEY = 'aerofit_clients_v2';
-    const PAYMENTS_KEY = 'aerofit_payments_v2';
+    // ============================================
+    // CONFIGURACIÓN DE SUPABASE
+    // Reemplaza con tus credenciales de Project Settings > API
+    // ============================================
+    const SUPABASE_URL = 'https://eqefyxzfxsidnftlbteq.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqW';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const MAX_CAPACITY = 300;
 
-    let clients = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    let payments = JSON.parse(localStorage.getItem(PAYMENTS_KEY)) || [];
+    // Variables globales en memoria (se llenan desde Supabase)
+    let clients = [];
+    let payments = [];
 
     const clientForm = document.getElementById('clientForm');
     const fullNameInput = document.getElementById('fullName');
@@ -663,7 +673,6 @@
       return `${year}-${month}-${day}`;
     }
 
-    // Calcula automáticamente cuántos días le quedan según la fecha actual
     function getDaysRemaining(endDateStr) {
       const today = new Date(getTodayString() + 'T00:00:00');
       const end = new Date(endDateStr + 'T00:00:00');
@@ -681,9 +690,34 @@
       }
     }
 
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
+    // ============================================
+    // CARGA DE DATOS DESDE SUPABASE
+    // ============================================
+    async function loadData() {
+      // Cargar clientes
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (clientsError) {
+        console.error('Error cargando clientes:', clientsError);
+      } else {
+        clients = clientsData || [];
+      }
+
+      // Cargar pagos
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (paymentsError) {
+        console.error('Error cargando pagos:', paymentsError);
+      } else {
+        payments = paymentsData || [];
+      }
+
       updateStats();
       renderClients();
     }
@@ -691,13 +725,15 @@
     function updateStats() {
       const today = getTodayString();
       const todayCount = clients.filter(
-        c => c.attendanceDates && c.attendanceDates.includes(today)
+        c => c.attendance_dates && c.attendance_dates.includes(today)
       ).length;
       statToday.textContent = todayCount;
     }
 
-    // Registrar Cliente
-    clientForm.addEventListener('submit', (e) => {
+    // ============================================
+    // REGISTRAR CLIENTE
+    // ============================================
+    clientForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       alertBox.style.display = 'none';
 
@@ -742,51 +778,78 @@
       const today = getTodayString();
       const endDate = addDays(today, duration);
 
-      const newClient = {
-        id: Date.now().toString(),
-        name: rawName,
-        credential: rawCredential,
-        startDate: today,
-        endDate: endDate,
-        attendanceDates: [today]
-      };
+      // Insertar cliente en Supabase
+      const { error: clientError } = await supabase
+        .from('clients')
+        .insert([{
+          name: rawName,
+          credential: rawCredential,
+          start_date: today,
+          end_date: endDate,
+          attendance_dates: [today]
+        }]);
 
-      clients.unshift(newClient);
+      if (clientError) {
+        console.error('Error al guardar cliente:', clientError);
+        showAlert('Error al guardar el cliente: ' + clientError.message, 'error');
+        return;
+      }
 
-      payments.unshift({
-        id: Date.now().toString(),
-        date: today,
-        clientName: rawName,
-        concept: `Inscripción (${duration} días)`,
-        amount: amount
-      });
+      // Insertar pago en Supabase
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert([{
+          date: today,
+          client_name: rawName,
+          concept: `Inscripción (${duration} días)`,
+          amount: amount
+        }]);
 
-      saveData();
+      if (paymentError) {
+        console.error('Error al guardar pago:', paymentError);
+      }
+
+      await loadData();
 
       clientForm.reset();
       planDurationInput.value = '30';
       showAlert(`✅ Cliente "${rawName}" guardado con ${duration} días disponibles.`, 'success');
     });
 
-    // Marcar asistencia del día
-    window.toggleCheckIn = function(id) {
+    // ============================================
+    // MARCAR ASISTENCIA
+    // ============================================
+    window.toggleCheckIn = async function(id) {
       const today = getTodayString();
       const client = clients.find(c => c.id === id);
       if (!client) return;
 
-      if (!client.attendanceDates) client.attendanceDates = [];
+      let attendanceDates = client.attendance_dates || [];
+      const idx = attendanceDates.indexOf(today);
 
-      const idx = client.attendanceDates.indexOf(today);
       if (idx === -1) {
-        client.attendanceDates.push(today);
+        attendanceDates.push(today);
       } else {
-        client.attendanceDates.splice(idx, 1);
+        attendanceDates.splice(idx, 1);
       }
-      saveData();
+
+      const { error } = await supabase
+        .from('clients')
+        .update({ attendance_dates: attendanceDates })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error al actualizar asistencia:', error);
+        return;
+      }
+
+      await loadData();
     };
 
-    // Renovar días y registrar dinero en el apartado separado
-    window.renewClient = function(id) {
+    // ============================================
+    // RENOVAR CLIENTE
+    // ============================================
+    window.renewClient = async function(id) {
       const client = clients.find(c => c.id === id);
       if (!client) return;
 
@@ -807,31 +870,62 @@
       }
 
       const today = getTodayString();
-      const baseDate = getDaysRemaining(client.endDate) > 0 ? client.endDate : today;
-      client.endDate = addDays(baseDate, days);
+      const baseDate = getDaysRemaining(client.end_date) > 0 ? client.end_date : today;
+      const newEndDate = addDays(baseDate, days);
 
-      payments.unshift({
-        id: Date.now().toString(),
-        date: today,
-        clientName: client.name,
-        concept: `Renovación (+${days} días)`,
-        amount: amount
-      });
+      // Actualizar fecha de vencimiento
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update({ end_date: newEndDate })
+        .eq('id', id);
 
-      saveData();
+      if (updateError) {
+        console.error('Error al renovar cliente:', updateError);
+        return;
+      }
+
+      // Registrar pago
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert([{
+          date: today,
+          client_name: client.name,
+          concept: `Renovación (+${days} días)`,
+          amount: amount
+        }]);
+
+      if (paymentError) {
+        console.error('Error al guardar pago:', paymentError);
+      }
+
+      await loadData();
     };
 
-    window.deleteClient = function(id) {
+    // ============================================
+    // ELIMINAR CLIENTE
+    // ============================================
+    window.deleteClient = async function(id) {
       const client = clients.find(c => c.id === id);
       if (!client) return;
 
       if (confirm(`¿Seguro que deseas eliminar a "${client.name}"?`)) {
-        clients = clients.filter(c => c.id !== id);
-        saveData();
+        const { error } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('Error al eliminar cliente:', error);
+          return;
+        }
+
+        await loadData();
       }
     };
 
-    // Modal apartado de dinero
+    // ============================================
+    // MODAL DE DINERO
+    // ============================================
     window.openMoneyModal = function() {
       const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
       totalMoneyDisplay.textContent = `$${total.toFixed(2)}`;
@@ -848,7 +942,7 @@
         moneyTableBody.innerHTML = payments.map(p => `
           <tr>
             <td>${p.date}</td>
-            <td><strong>${p.clientName}</strong></td>
+            <td><strong>${p.client_name}</strong></td>
             <td>${p.concept}</td>
             <td style="color: var(--primary-hover); font-weight: 700;">$${Number(p.amount).toFixed(2)}</td>
           </tr>
@@ -866,7 +960,9 @@
       if (e.target === moneyModal) closeMoneyModal();
     });
 
-    // Renderizar clientes mostrando cuántos días le quedan restantes
+    // ============================================
+    // RENDERIZAR CLIENTES
+    // ============================================
     function renderClients() {
       const query = normalizeText(searchInput.value);
       const filter = statusFilter.value;
@@ -879,8 +975,8 @@
 
         if (!matchesQuery) return false;
 
-        const daysLeft = getDaysRemaining(client.endDate);
-        const cameToday = client.attendanceDates && client.attendanceDates.includes(today);
+        const daysLeft = getDaysRemaining(client.end_date);
+        const cameToday = client.attendance_dates && client.attendance_dates.includes(today);
 
         if (filter === 'active') return daysLeft > 0;
         if (filter === 'expired') return daysLeft <= 0;
@@ -900,9 +996,9 @@
       }
 
       clientListEl.innerHTML = filtered.map(client => {
-        const daysLeft = getDaysRemaining(client.endDate);
-        const cameToday = client.attendanceDates && client.attendanceDates.includes(today);
-        const totalVisits = client.attendanceDates ? client.attendanceDates.length : 0;
+        const daysLeft = getDaysRemaining(client.end_date);
+        const cameToday = client.attendance_dates && client.attendance_dates.includes(today);
+        const totalVisits = client.attendance_dates ? client.attendance_dates.length : 0;
 
         let daysLabel = '';
         let badgeClass = 'ok';
@@ -934,7 +1030,7 @@
                 ${cameToday ? '<span class="badge-today">✔ Vino hoy</span>' : ''}
               </h3>
               <div class="client-meta">
-                <span>📅 Vence el: ${client.endDate}</span>
+                <span>📅 Vence el: ${client.end_date}</span>
                 <span>🏋️‍♂️ Asistencias totales: ${totalVisits}</span>
               </div>
             </div>
@@ -968,8 +1064,10 @@
     searchInput.addEventListener('input', renderClients);
     statusFilter.addEventListener('change', renderClients);
 
-    updateStats();
-    renderClients();
+    // ============================================
+    // INICIALIZAR LA APP
+    // ============================================
+    loadData();
   </script>
 </body>
 </html>
