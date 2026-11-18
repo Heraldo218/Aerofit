@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+S<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -782,7 +782,7 @@
 
       if (clientError) {
         // Esto te mostrará exactamente qué está fallando en Supabase
-        alert('Error de Supabase al guardar cliente:\n' + clientError.message + '\nCódigo: ' + clientError.code);
+               alert('ERROR DE SUPABASE:\n' + clientError.message + '\nCódigo: ' + clientError.code + '\nDetalles: ' + clientError.details + '\nSugerencia: ' + clientError.hint);
         return;
       }
 
