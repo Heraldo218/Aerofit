@@ -1,4 +1,4 @@
-S<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -38,7 +38,6 @@ S<!DOCTYPE html>
       margin: 0 auto;
     }
 
-    /* Header */
     header {
       background: var(--surface);
       border: 2px solid var(--border);
@@ -109,7 +108,6 @@ S<!DOCTYPE html>
       color: #ffffff;
     }
 
-    /* Layout Grid */
     .main-grid {
       display: grid;
       grid-template-columns: 350px 1fr;
@@ -139,7 +137,6 @@ S<!DOCTYPE html>
       border-bottom: 1px solid var(--border);
     }
 
-    /* Form */
     .form-group {
       margin-bottom: 15px;
     }
@@ -192,7 +189,6 @@ S<!DOCTYPE html>
       background: var(--primary-hover);
     }
 
-    /* Alert Box */
     .alert {
       padding: 12px;
       border-radius: 8px;
@@ -217,7 +213,6 @@ S<!DOCTYPE html>
       color: var(--success);
     }
 
-    /* Search & Filter */
     .search-header {
       display: flex;
       gap: 10px;
@@ -251,7 +246,6 @@ S<!DOCTYPE html>
       min-width: 160px;
     }
 
-    /* Client List */
     .client-list {
       display: flex;
       flex-direction: column;
@@ -396,7 +390,6 @@ S<!DOCTYPE html>
       background: #ffffff;
     }
 
-    /* Apartado separado de Dinero (Oculto de la entrada principal) */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -502,35 +495,18 @@ S<!DOCTYPE html>
     </header>
 
     <div class="main-grid">
-      <!-- Panel de Registro -->
       <section class="card">
         <h2>➕ Registrar Cliente</h2>
-
         <div id="alertBox" class="alert"></div>
-
         <form id="clientForm">
           <div class="form-group">
             <label for="fullName">Nombre del Cliente *</label>
-            <input
-              type="text"
-              id="fullName"
-              placeholder="Ej. Carlos Mendoza"
-              required
-              autocomplete="off"
-            />
+            <input type="text" id="fullName" placeholder="Ej. Carlos Mendoza" required autocomplete="off" />
           </div>
-
           <div class="form-group">
             <label for="credential">Credencial / Identificador *</label>
-            <input
-              type="text"
-              id="credential"
-              placeholder="Ej. DUI, Teléfono o Apodo"
-              required
-              autocomplete="off"
-            />
+            <input type="text" id="credential" placeholder="Ej. DUI, Teléfono o Apodo" required autocomplete="off" />
           </div>
-
           <div class="form-group">
             <label for="planDuration">Días de Membresía</label>
             <select id="planDuration">
@@ -541,37 +517,19 @@ S<!DOCTYPE html>
               <option value="90">90 días (Trimestre)</option>
             </select>
           </div>
-
           <div class="form-group">
             <label for="amountPaid">¿Cuánto dejó de dinero? ($) *</label>
-            <input
-              type="number"
-              id="amountPaid"
-              step="0.01"
-              min="0"
-              placeholder="Ej. 15.00"
-              required
-            />
+            <input type="number" id="amountPaid" step="0.01" min="0" placeholder="Ej. 15.00" required />
           </div>
-
-          <button type="submit" class="btn btn-primary" id="submitBtn">
-            Guardar Cliente
-          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Guardar Cliente</button>
         </form>
       </section>
 
-      <!-- Buscador y Lista de Clientes -->
       <section class="card">
         <h2>🔎 Buscar Cliente</h2>
-
         <div class="search-header">
           <div class="search-box">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Escribe el nombre del cliente..."
-              autocomplete="off"
-            />
+            <input type="text" id="searchInput" placeholder="Escribe el nombre del cliente..." autocomplete="off" />
           </div>
           <select id="statusFilter" class="filter-select">
             <option value="all">Todos los clientes</option>
@@ -580,25 +538,21 @@ S<!DOCTYPE html>
             <option value="today">Vinieron Hoy</option>
           </select>
         </div>
-
         <div id="clientList" class="client-list"></div>
       </section>
     </div>
   </div>
 
-  <!-- Apartado separado para ver el dinero (No visible en la pantalla principal) -->
   <div id="moneyModal" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
         <h2>💵 Apartado de Dinero — AeroFit</h2>
         <button type="button" class="btn-close" onclick="closeMoneyModal()">Cerrar ✕</button>
       </div>
-
       <div class="money-summary">
         <span>Total recaudado registrado:</span>
         <strong id="totalMoneyDisplay">$0.00</strong>
       </div>
-
       <table class="money-table">
         <thead>
           <tr>
@@ -613,22 +567,18 @@ S<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- Librería de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     // ============================================
     // CONFIGURACIÓN DE SUPABASE
     // ============================================
- const SUPABASE_URL = 'https://eqefyxzfxsidnftlbteq.supabase.co'; // OJO: Revisa que no haya espacios en tu URL real
- const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqwW';
- const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://eqefyxzfxsidnftlbteq.supabase.co'; // Revisa que no tenga espacios
+    const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqwW';
     
-    // Usamos 'supabaseClient' para no chocar con la variable global de la librería
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const MAX_CAPACITY = 300;
-
     let clients = [];
     let payments = [];
 
@@ -638,23 +588,16 @@ S<!DOCTYPE html>
     const planDurationInput = document.getElementById('planDuration');
     const amountPaidInput = document.getElementById('amountPaid');
     const alertBox = document.getElementById('alertBox');
-
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const clientListEl = document.getElementById('clientList');
     const statToday = document.getElementById('statToday');
-
     const moneyModal = document.getElementById('moneyModal');
     const totalMoneyDisplay = document.getElementById('totalMoneyDisplay');
     const moneyTableBody = document.getElementById('moneyTableBody');
 
     function normalizeText(str) {
-      return str
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ');
+      return str.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
     }
 
     function getTodayString() {
@@ -685,14 +628,12 @@ S<!DOCTYPE html>
       alertBox.textContent = message;
       alertBox.className = `alert ${type}`;
       if (type === 'success') {
-        setTimeout(() => {
-          alertBox.style.display = 'none';
-        }, 4000);
+        setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
       }
     }
 
     // ============================================
-    // CARGA DE DATOS DESDE SUPABASE
+    // CARGAR DATOS
     // ============================================
     async function loadData() {
       const { data: clientsData, error: clientsError } = await supabaseClient
@@ -701,7 +642,7 @@ S<!DOCTYPE html>
         .order('created_at', { ascending: false });
 
       if (clientsError) {
-        alert('Error al cargar clientes: ' + clientsError.message);
+        alert('Error al cargar clientes:\n' + clientsError.message);
       } else {
         clients = clientsData || [];
       }
@@ -712,7 +653,7 @@ S<!DOCTYPE html>
         .order('created_at', { ascending: false });
 
       if (paymentsError) {
-        alert('Error al cargar pagos: ' + paymentsError.message);
+        alert('Error al cargar pagos:\n' + paymentsError.message);
       } else {
         payments = paymentsData || [];
       }
@@ -723,9 +664,7 @@ S<!DOCTYPE html>
 
     function updateStats() {
       const today = getTodayString();
-      const todayCount = clients.filter(
-        c => c.attendance_dates && c.attendance_dates.includes(today)
-      ).length;
+      const todayCount = clients.filter(c => c.attendance_dates && c.attendance_dates.includes(today)).length;
       statToday.textContent = todayCount;
     }
 
@@ -737,7 +676,7 @@ S<!DOCTYPE html>
       alertBox.style.display = 'none';
 
       if (clients.length >= MAX_CAPACITY) {
-        showAlert(`⚠️ Se alcanzó el límite máximo de ${MAX_CAPACITY} clientes.`, 'error');
+        showAlert(`⚠️ Se alcanzó el límite de ${MAX_CAPACITY} clientes.`, 'error');
         return;
       }
 
@@ -754,14 +693,11 @@ S<!DOCTYPE html>
       const normName = normalizeText(rawName);
       const normCred = normalizeText(rawCredential);
 
-      const duplicateName = clients.some(c => normalizeText(c.name) === normName);
-      if (duplicateName) {
+      if (clients.some(c => normalizeText(c.name) === normName)) {
         showAlert(`⚠️ El nombre "${rawName}" ya existe.`, 'error');
         return;
       }
-
-      const duplicateCred = clients.some(c => normalizeText(c.credential) === normCred);
-      if (duplicateCred) {
+      if (clients.some(c => normalizeText(c.credential) === normCred)) {
         showAlert(`⚠️ La credencial "${rawCredential}" ya está en uso.`, 'error');
         return;
       }
@@ -769,7 +705,6 @@ S<!DOCTYPE html>
       const today = getTodayString();
       const endDate = addDays(today, duration);
 
-      // Insertar cliente en Supabase
       const { error: clientError } = await supabaseClient
         .from('clients')
         .insert([{
@@ -781,11 +716,10 @@ S<!DOCTYPE html>
         }]);
 
       if (clientError) {
-        // Esto te mostrará exactamente qué está fallando en Supabase
-                alert('ERROR DE SUPABASE:\n' + clientError.message + '\nCódigo: ' + clientError.code + '\nDetalles: ' + clientError.details + '\nSugerencia: ' + clientError.hint);
+        alert('ERROR SUPABASE (Cliente):\n' + clientError.message + '\nCódigo: ' + clientError.code);
+        return;
       }
 
-      // Insertar pago en Supabase
       const { error: paymentError } = await supabaseClient
         .from('payments')
         .insert([{
@@ -796,14 +730,13 @@ S<!DOCTYPE html>
         }]);
 
       if (paymentError) {
-        alert('Error al guardar el pago:\n' + paymentError.message);
+        alert('ERROR SUPABASE (Pago):\n' + paymentError.message);
       }
 
       await loadData();
-
       clientForm.reset();
       planDurationInput.value = '30';
-      showAlert(`✅ Cliente "${rawName}" guardado con ${duration} días disponibles.`, 'success');
+      showAlert(`✅ Cliente "${rawName}" guardado exitosamente.`, 'success');
     });
 
     // ============================================
@@ -817,11 +750,8 @@ S<!DOCTYPE html>
       let attendanceDates = client.attendance_dates || [];
       const idx = attendanceDates.indexOf(today);
 
-      if (idx === -1) {
-        attendanceDates.push(today);
-      } else {
-        attendanceDates.splice(idx, 1);
-      }
+      if (idx === -1) attendanceDates.push(today);
+      else attendanceDates.splice(idx, 1);
 
       const { error } = await supabaseClient
         .from('clients')
@@ -832,7 +762,6 @@ S<!DOCTYPE html>
         alert('Error al actualizar asistencia:\n' + error.message);
         return;
       }
-
       await loadData();
     };
 
@@ -845,19 +774,12 @@ S<!DOCTYPE html>
 
       const daysStr = prompt(`¿Cuántos días deseas agregarle a ${client.name}?`, '30');
       if (!daysStr) return;
-
       const days = parseInt(daysStr, 10);
-      if (isNaN(days) || days <= 0) {
-        alert('Ingresa un número válido de días.');
-        return;
-      }
+      if (isNaN(days) || days <= 0) { alert('Número de días inválido.'); return; }
 
       const moneyStr = prompt(`¿Cuánto dejó de dinero ${client.name}? ($)`, '15');
       const amount = parseFloat(moneyStr);
-      if (isNaN(amount) || amount < 0) {
-        alert('Ingresa un monto válido.');
-        return;
-      }
+      if (isNaN(amount) || amount < 0) { alert('Monto inválido.'); return; }
 
       const today = getTodayString();
       const baseDate = getDaysRemaining(client.end_date) > 0 ? client.end_date : today;
@@ -868,23 +790,13 @@ S<!DOCTYPE html>
         .update({ end_date: newEndDate })
         .eq('id', id);
 
-      if (updateError) {
-        alert('Error al renovar cliente:\n' + updateError.message);
-        return;
-      }
+      if (updateError) { alert('Error al renovar:\n' + updateError.message); return; }
 
       const { error: paymentError } = await supabaseClient
         .from('payments')
-        .insert([{
-          date: today,
-          client_name: client.name,
-          concept: `Renovación (+${days} días)`,
-          amount: amount
-        }]);
+        .insert([{ date: today, client_name: client.name, concept: `Renovación (+${days} días)`, amount: amount }]);
 
-      if (paymentError) {
-        alert('Error al guardar el pago de renovación:\n' + paymentError.message);
-      }
+      if (paymentError) alert('Error al guardar pago:\n' + paymentError.message);
 
       await loadData();
     };
@@ -897,16 +809,8 @@ S<!DOCTYPE html>
       if (!client) return;
 
       if (confirm(`¿Seguro que deseas eliminar a "${client.name}"?`)) {
-        const { error } = await supabaseClient
-          .from('clients')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          alert('Error al eliminar cliente:\n' + error.message);
-          return;
-        }
-
+        const { error } = await supabaseClient.from('clients').delete().eq('id', id);
+        if (error) { alert('Error al eliminar:\n' + error.message); return; }
         await loadData();
       }
     };
@@ -919,13 +823,7 @@ S<!DOCTYPE html>
       totalMoneyDisplay.textContent = `$${total.toFixed(2)}`;
 
       if (payments.length === 0) {
-        moneyTableBody.innerHTML = `
-          <tr>
-            <td colspan="4" style="text-align:center; color: var(--text-muted); padding: 20px;">
-              Aún no hay registros de dinero.
-            </td>
-          </tr>
-        `;
+        moneyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">Aún no hay registros.</td></tr>`;
       } else {
         moneyTableBody.innerHTML = payments.map(p => `
           <tr>
@@ -936,7 +834,6 @@ S<!DOCTYPE html>
           </tr>
         `).join('');
       }
-
       moneyModal.classList.add('open');
     };
 
@@ -957,10 +854,7 @@ S<!DOCTYPE html>
       const today = getTodayString();
 
       const filtered = clients.filter(client => {
-        const matchesQuery =
-          normalizeText(client.name).includes(query) ||
-          normalizeText(client.credential).includes(query);
-
+        const matchesQuery = normalizeText(client.name).includes(query) || normalizeText(client.credential).includes(query);
         if (!matchesQuery) return false;
 
         const daysLeft = getDaysRemaining(client.end_date);
@@ -973,13 +867,7 @@ S<!DOCTYPE html>
       });
 
       if (filtered.length === 0) {
-        clientListEl.innerHTML = `
-          <div class="empty-state">
-            ${clients.length === 0
-              ? 'No hay clientes registrados en AeroFit. Registra el primero a la izquierda.'
-              : 'No se encontró ningún cliente con ese nombre.'}
-          </div>
-        `;
+        clientListEl.innerHTML = `<div class="empty-state">${clients.length === 0 ? 'No hay clientes registrados.' : 'No se encontró ningún cliente.'}</div>`;
         return;
       }
 
@@ -991,22 +879,11 @@ S<!DOCTYPE html>
         let daysLabel = '';
         let badgeClass = 'ok';
 
-        if (daysLeft > 5) {
-          daysLabel = `⏳ Le quedan ${daysLeft} días`;
-          badgeClass = 'ok';
-        } else if (daysLeft > 1) {
-          daysLabel = `⚠️ Le quedan ${daysLeft} días`;
-          badgeClass = 'warning';
-        } else if (daysLeft === 1) {
-          daysLabel = `⚠️ Le queda 1 día`;
-          badgeClass = 'warning';
-        } else if (daysLeft === 0) {
-          daysLabel = `❗ Vence hoy (0 días)`;
-          badgeClass = 'expired';
-        } else {
-          daysLabel = `❌ Vencido (hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) === 1 ? '' : 's'})`;
-          badgeClass = 'expired';
-        }
+        if (daysLeft > 5) { daysLabel = `⏳ Le quedan ${daysLeft} días`; badgeClass = 'ok'; }
+        else if (daysLeft > 1) { daysLabel = `⚠️ Le quedan ${daysLeft} días`; badgeClass = 'warning'; }
+        else if (daysLeft === 1) { daysLabel = `⚠️ Le queda 1 día`; badgeClass = 'warning'; }
+        else if (daysLeft === 0) { daysLabel = `❗ Vence hoy`; badgeClass = 'expired'; }
+        else { daysLabel = `❌ Vencido (hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) === 1 ? '' : 's'})`; badgeClass = 'expired'; }
 
         return `
           <div class="client-item">
@@ -1019,30 +896,15 @@ S<!DOCTYPE html>
               </h3>
               <div class="client-meta">
                 <span>📅 Vence el: ${client.end_date}</span>
-                <span>🏋️‍♂️ Asistencias totales: ${totalVisits}</span>
+                <span>🏋️‍♂️ Asistencias: ${totalVisits}</span>
               </div>
             </div>
-
             <div class="client-actions">
-              <button
-                class="btn-sm btn-checkin ${cameToday ? 'checked' : ''}"
-                onclick="toggleCheckIn('${client.id}')"
-              >
+              <button class="btn-sm btn-checkin ${cameToday ? 'checked' : ''}" onclick="toggleCheckIn('${client.id}')">
                 ${cameToday ? '✔ Asistió Hoy' : 'Marcar Asistencia'}
               </button>
-              <button
-                class="btn-sm btn-renew"
-                onclick="renewClient('${client.id}')"
-              >
-                + Renovar
-              </button>
-              <button
-                class="btn-sm btn-delete"
-                onclick="deleteClient('${client.id}')"
-                title="Eliminar cliente"
-              >
-                🗑️
-              </button>
+              <button class="btn-sm btn-renew" onclick="renewClient('${client.id}')">+ Renovar</button>
+              <button class="btn-sm btn-delete" onclick="deleteClient('${client.id}')" title="Eliminar">🗑️</button>
             </div>
           </div>
         `;
@@ -1052,9 +914,7 @@ S<!DOCTYPE html>
     searchInput.addEventListener('input', renderClients);
     statusFilter.addEventListener('change', renderClients);
 
-    // ============================================
-    // INICIALIZAR LA APP
-    // ============================================
+    // Iniciar la app
     loadData();
   </script>
 </body>
