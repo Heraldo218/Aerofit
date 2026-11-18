@@ -620,8 +620,9 @@
     // ============================================
     // CONFIGURACIÓN DE SUPABASE
     // ============================================
-    const SUPABASE_URL = 'https://eqefyxzfxsidnftlbteq.supabase.co'; // OJO: Revisa que no haya espacios en tu URL real
-    const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqwW';
+ const SUPABASE_URL = 'https://eqefyxzfxsi dnftlbteq.supabase.co'; // OJO: Revisa que no haya espacios en tu URL real
+ const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqwW';
+ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     // Usamos 'supabaseClient' para no chocar con la variable global de la librería
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
