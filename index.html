@@ -619,15 +619,15 @@
   <script>
     // ============================================
     // CONFIGURACIÓN DE SUPABASE
-    // Reemplaza con tus credenciales de Project Settings > API
     // ============================================
-    const SUPABASE_URL = 'https://eqefyxzfxsidnftlbteq.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqW';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://eqefyxzfxsi dnftlbteq.supabase.co'; // OJO: Revisa que no haya espacios en tu URL real
+    const SUPABASE_ANON_KEY = 'sb_publishable_cPxIRUZcKM1z5ZxbSCj8wg_c3tY3VqwW';
+    
+    // Usamos 'supabaseClient' para no chocar con la variable global de la librería
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const MAX_CAPACITY = 300;
 
-    // Variables globales en memoria (se llenan desde Supabase)
     let clients = [];
     let payments = [];
 
@@ -694,26 +694,24 @@
     // CARGA DE DATOS DESDE SUPABASE
     // ============================================
     async function loadData() {
-      // Cargar clientes
-      const { data: clientsData, error: clientsError } = await supabase
+      const { data: clientsData, error: clientsError } = await supabaseClient
         .from('clients')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (clientsError) {
-        console.error('Error cargando clientes:', clientsError);
+        alert('Error al cargar clientes: ' + clientsError.message);
       } else {
         clients = clientsData || [];
       }
 
-      // Cargar pagos
-      const { data: paymentsData, error: paymentsError } = await supabase
+      const { data: paymentsData, error: paymentsError } = await supabaseClient
         .from('payments')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (paymentsError) {
-        console.error('Error cargando pagos:', paymentsError);
+        alert('Error al cargar pagos: ' + paymentsError.message);
       } else {
         payments = paymentsData || [];
       }
@@ -757,21 +755,13 @@
 
       const duplicateName = clients.some(c => normalizeText(c.name) === normName);
       if (duplicateName) {
-        showAlert(
-          `⚠️ El nombre "${rawName}" ya existe. Agrega otro apellido o cambia el nombre para diferenciarlo.`,
-          'error'
-        );
-        fullNameInput.focus();
+        showAlert(`⚠️ El nombre "${rawName}" ya existe.`, 'error');
         return;
       }
 
       const duplicateCred = clients.some(c => normalizeText(c.credential) === normCred);
       if (duplicateCred) {
-        showAlert(
-          `⚠️ La credencial "${rawCredential}" ya la tiene otro cliente. Usa una diferente.`,
-          'error'
-        );
-        credentialInput.focus();
+        showAlert(`⚠️ La credencial "${rawCredential}" ya está en uso.`, 'error');
         return;
       }
 
@@ -779,7 +769,7 @@
       const endDate = addDays(today, duration);
 
       // Insertar cliente en Supabase
-      const { error: clientError } = await supabase
+      const { error: clientError } = await supabaseClient
         .from('clients')
         .insert([{
           name: rawName,
@@ -790,13 +780,13 @@
         }]);
 
       if (clientError) {
-        console.error('Error al guardar cliente:', clientError);
-        showAlert('Error al guardar el cliente: ' + clientError.message, 'error');
+        // Esto te mostrará exactamente qué está fallando en Supabase
+        alert('Error de Supabase al guardar cliente:\n' + clientError.message + '\nCódigo: ' + clientError.code);
         return;
       }
 
       // Insertar pago en Supabase
-      const { error: paymentError } = await supabase
+      const { error: paymentError } = await supabaseClient
         .from('payments')
         .insert([{
           date: today,
@@ -806,7 +796,7 @@
         }]);
 
       if (paymentError) {
-        console.error('Error al guardar pago:', paymentError);
+        alert('Error al guardar el pago:\n' + paymentError.message);
       }
 
       await loadData();
@@ -833,13 +823,13 @@
         attendanceDates.splice(idx, 1);
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('clients')
         .update({ attendance_dates: attendanceDates })
         .eq('id', id);
 
       if (error) {
-        console.error('Error al actualizar asistencia:', error);
+        alert('Error al actualizar asistencia:\n' + error.message);
         return;
       }
 
@@ -873,19 +863,17 @@
       const baseDate = getDaysRemaining(client.end_date) > 0 ? client.end_date : today;
       const newEndDate = addDays(baseDate, days);
 
-      // Actualizar fecha de vencimiento
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseClient
         .from('clients')
         .update({ end_date: newEndDate })
         .eq('id', id);
 
       if (updateError) {
-        console.error('Error al renovar cliente:', updateError);
+        alert('Error al renovar cliente:\n' + updateError.message);
         return;
       }
 
-      // Registrar pago
-      const { error: paymentError } = await supabase
+      const { error: paymentError } = await supabaseClient
         .from('payments')
         .insert([{
           date: today,
@@ -895,7 +883,7 @@
         }]);
 
       if (paymentError) {
-        console.error('Error al guardar pago:', paymentError);
+        alert('Error al guardar el pago de renovación:\n' + paymentError.message);
       }
 
       await loadData();
@@ -909,13 +897,13 @@
       if (!client) return;
 
       if (confirm(`¿Seguro que deseas eliminar a "${client.name}"?`)) {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('clients')
           .delete()
           .eq('id', id);
 
         if (error) {
-          console.error('Error al eliminar cliente:', error);
+          alert('Error al eliminar cliente:\n' + error.message);
           return;
         }
 
