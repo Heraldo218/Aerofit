@@ -782,8 +782,14 @@
       if (isNaN(amount) || amount < 0) { alert('Monto inválido.'); return; }
 
       const today = getTodayString();
-      const baseDate = getDaysRemaining(client.end_date) > 0 ? client.end_date : today;
-      const newEndDate = addDays(baseDate, days);
+          if (clientError) {
+        alert('ERROR DE SUPABASE:\n' + 
+              'Mensaje: ' + clientError.message + '\n' + 
+              'Código: ' + clientError.code + '\n' + 
+              'Detalles: ' + clientError.details + '\n' + 
+              'Sugerencia: ' + clientError.hint);
+        return; // 👈 ESTO ES IMPORTANTE
+      }
 
       const { error: updateError } = await supabaseClient
         .from('clients')
